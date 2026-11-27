@@ -1,8 +1,18 @@
 import pg from 'pg';
 
-const url = process.env.DATABASE_URL;
-if (!url) {
-  console.error('DATABASE_URL is not set. Copy server/.env.example to server/.env and fill it in.');
+// Tolerate common paste mistakes: surrounding spaces/quotes, a "DATABASE_URL=" prefix,
+// or Neon's "psql '...'" snippet instead of the bare connection string.
+const url = (process.env.DATABASE_URL ?? '')
+  .trim()
+  .replace(/^DATABASE_URL\s*=\s*/, '')
+  .replace(/^psql\s+/, '')
+  .replace(/^['"]|['"]$/g, '')
+  .trim();
+if (!/^postgres(ql)?:\/\/[^@]+@[^/]+/.test(url)) {
+  console.error(
+    'DATABASE_URL is missing or not a valid connection string.\n' +
+    'It must look like: postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require\n' +
+    `Got: ${url ? url.replace(/:\/\/([^:]*):[^@]*@/, '://$1:****@').slice(0, 80) : '(empty)'}`);
   process.exit(1);
 }
 
