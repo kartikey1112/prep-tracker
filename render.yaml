@@ -1,0 +1,14 @@
+# Render Blueprint: New > Blueprint, point it at this repo.
+services:
+  - type: web
+    name: prep-tracker
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        sync: false # paste your Neon / Supabase connection string when Render asks
