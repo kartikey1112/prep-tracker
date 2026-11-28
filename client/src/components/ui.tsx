@@ -72,18 +72,50 @@ export function ExtLink({ href, children }: { href: string; children: ReactNode 
   return <a href={href} target="_blank" rel="noreferrer noopener">{children}</a>;
 }
 
-/** Turns bank IDs inside task text (D-001, MC-13, Q-004 …) into buttons that open the item. */
+/**
+ * Turns bank IDs inside task text (D-001, MC-13, Q-004 …) into buttons that open the item,
+ * and makes the problem name beside each ID open it too:
+ *   "Two Sum [D-001] + Contains Duplicate [D-002]"  → name before the bracketed ID
+ *   "H-01 HTML semantics; R-01 Virtual DOM"          → name after the bare ID
+ */
 export function Linkify({ text }: { text: string }) {
   const { index, open } = useStore();
+  const matches = [...text.matchAll(ID_RE)].filter((m) => index.has(m[0]));
   const parts: ReactNode[] = [];
   let last = 0;
-  for (const m of text.matchAll(ID_RE)) {
+  const name = (id: string, label: string, key: string) =>
+    <button key={key} type="button" className="itemlink" onClick={() => open(id)}>{label}</button>;
+
+  matches.forEach((m, k) => {
     const id = m[0];
-    if (!index.has(id)) continue;
-    parts.push(text.slice(last, m.index));
-    parts.push(<button key={`${id}-${m.index}`} type="button" className="idlink" onClick={() => open(id)}>{id}</button>);
-    last = (m.index ?? 0) + id.length;
-  }
+    const at = m.index ?? 0;
+    const chip = <button key={`${id}-${at}`} type="button" className="idlink" onClick={() => open(id)}>{id}</button>;
+    const before = text.slice(last, at);
+
+    if (before.endsWith('[')) {
+      // "Name [ID]": the name runs back to the start of this segment.
+      const seg = before.slice(0, -1);
+      const cut = Math.max(0, ...[' + ', ' | ', '; '].map((s) => { const i = seg.lastIndexOf(s); return i < 0 ? 0 : i + s.length; }));
+      const label = seg.slice(cut).trim();
+      if (label) {
+        parts.push(seg.slice(0, cut), name(id, label, `${id}-${at}-n`), seg.slice(cut + label.length) + '[', chip);
+        last = at + id.length;
+        return;
+      }
+    }
+    parts.push(before, chip);
+    last = at + id.length;
+
+    // "ID Name": the name runs forward to the next ';' or ',' (or the next ID / end of text).
+    const stop = matches[k + 1]?.index ?? text.length;
+    const after = text.slice(last, stop);
+    const tail = /^ ([A-Za-z][^;,|]*)/.exec(after);
+    if (tail) {
+      const label = tail[1].trimEnd();
+      parts.push(' ', name(id, label, `${id}-${at}-n`));
+      last += 1 + label.length;
+    }
+  });
   parts.push(text.slice(last));
   return <>{parts}</>;
 }

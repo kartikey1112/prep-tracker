@@ -101,6 +101,8 @@ label.block { width: 100%; }
 .conf button.on { background: var(--cobalt); border-color: var(--cobalt); color: #fff; }
 .idlink { font: 500 12px var(--mono); background: var(--zone); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; cursor: pointer; color: var(--cobalt); }
 @media (prefers-color-scheme: dark) { .idlink { color: #8aa5ff; } }
+.itemlink { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.itemlink:hover, .itemlink:focus-visible { color: var(--cobalt); text-decoration-color: currentColor; }
 .linkish { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
 .linkish:hover { color: var(--cobalt); text-decoration: underline; }
 .tag { font: 500 12px var(--mono); background: var(--zone-2); padding: 2px 8px; border-radius: 4px; }
